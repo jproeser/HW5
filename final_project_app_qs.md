@@ -4,7 +4,6 @@
 *** I did about half of part 1 and then started to run into some problems. I realized that it would be very hard to receive the help I needed due to Thanksgiving break, and so I decided to switch and focus on the final project, especially because this is the only opportunity I have left to drop an assignment. I have started to mess around with the Soundcloud API and my tables for the final project and I am hoping to create a project that will exist online past the time that this course is completed.
 
 
-
 ## Overall
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * **What's a one-two sentence description of what your app will do?**
