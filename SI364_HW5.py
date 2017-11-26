@@ -12,6 +12,9 @@ from flask_sqlalchemy import SQLAlchemy
 
 from flask_migrate import Migrate, MigrateCommand
 
+
+from flask.ext.mail import Mail
+
 # Configure base directory of app
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -21,22 +24,35 @@ app.debug = True
 app.config['SECRET_KEY'] = 'hardtoguessstringfromsi364(thisisnotsupersecure)'
 ## Create a database in postgresql in the code line below, and fill in your app's database URI. It should be of the format: postgresql://localhost/YOUR_DATABASE_NAME
 
-## TODO: Create database and change the SQLAlchemy Database URI.
+#DONE# TODO: Create database and change the SQLAlchemy Database URI.
 ## Your Postgres database should be your uniqname, plus HW5, e.g. "jczettaHW5" or "maupandeHW5"
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://localhost/hw5_364"
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://localhost/jproeserHW5"
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# TODO: Add configuration specifications so that email can be sent from this application, like the examples you saw in the textbook and in class. Make sure you've installed the correct library with pip! See textbook.
+#Done?# TODO: Add configuration specifications so that email can be sent from this application, like the examples you saw in the textbook and in class. Make sure you've installed the correct library with pip! See textbook.
 # NOTE: Make sure that you DO NOT write your actual email password in text!!!!
 # NOTE: You will need to use a gmail account to follow the examples in the textbook, and you can create one of those for free, if you want. In THIS application, you should use the username and password from the environment variables, as directed in the textbook. So when WE run your app, we will be using OUR email, not yours.
+
+mail = Mail(app)
+
+
+app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+
+app.config['MAIL_SUBJECT_PREFIX'] = '[jproeserHW5]'
+app.config['MAIL_SENDER'] = 'Admin' 
+app.config['ADMIN'] = os.environ.get('ADMIN')
 
 # Set up Flask debug stuff
 manager = Manager(app)
 db = SQLAlchemy(app) # For database use
 migrate = Migrate(app, db) # For database use/updating
 manager.add_command('db', MigrateCommand) # Add migrate
-# TODO: Run commands to create your migrations folder and get ready to create a first migration, as shown in the textbook and in class.
+# DONE##TODO: Run commands to create your migrations folder and get ready to create a first migration, as shown in the textbook and in class.
 
 ## Set up Shell context so it's easy to use the shell to debug
 def make_shell_context():
@@ -44,12 +60,24 @@ def make_shell_context():
 # Add function use to manager
 manager.add_command("shell", Shell(make_context=make_shell_context))
 
-# TODO: Write a send_email function here. (As shown in examples.)
+##Done### TODO: Write a send_email function here. (As shown in examples.)
 
 #########
 ######### Everything above this line is important/useful setup, not problem-solving.
 #########
 #########
+
+
+def send_email(to, subject, template, **kwargs): 
+    msg = Message(app.config['MAIL_SUBJECT_PREFIX'] + ' ' + subject,
+                  sender=app.config['MAIL_SENDER'], recipients=[to])
+    msg.body = render_template(template + '.txt', **kwargs)
+    msg.html = render_template(template + '.html', **kwargs)
+    thr = Thread(target=send_async_email, args=[app, msg]) #
+    thr.start()
+    return thr 
+
+
 
 ##### Set up Models #####
 
@@ -67,12 +95,13 @@ class Tweet(db.Model):
     def __repr__(self):
         return "{}, (ID: {})".format(self.text,self.id)
 
-# TODO: Add and run a  migration so that each twitter username also saves an associated email.
+##Done## TODO: Add and run a  migration so that each twitter username also saves an associated email.
 # User model
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True) ## -- id (Primary Key)
     twitter_username = db.Column(db.String(64), unique=True)
+    email = db.Column(db.String(64), unique=True)
     def __repr__(self):
         return "{} (ID: {})".format(self.twitter_username,self.id)
 
@@ -93,6 +122,7 @@ class Hashtag(db.Model):
 class TweetForm(FlaskForm):
     text = StringField("What is the text of your tweet? Please separate all hashtags with commas in this case. e.g. 'Yay Python #python, #programming, #awesome' ", validators=[Required()])
     username = StringField("What is your Twitter username?",validators=[Required()])
+    email = StringField("What is your email?",validators=[Required()])
     submit = SubmitField('Submit')
 
 
